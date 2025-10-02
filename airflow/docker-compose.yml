@@ -1,3 +1,4 @@
+# Menggunakan YAML Anchors untuk mendefinisikan konfigurasi umum
 x-airflow-common:
   &airflow-common
   image: apache/airflow:2.8.1
@@ -7,7 +8,12 @@ x-airflow-common:
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow_db
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow_db
     AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ''
+    # <<< DITAMBAHKAN: Kunci untuk enkripsi, penting untuk keamanan
+    AIRFLOW__CORE__FERNET_KEY: '${AIRFLOW__CORE__FERNET_KEY:-_225I_s8_OFQ3j_8bAcb_tRG3MEa-O3hpy3Zc2d_ajg=}'
+    # <<< DITAMBAHKAN: Kunci rahasia untuk mengatasi error 403 FORBIDDEN
+    AIRFLOW__WEBSERVER__SECRET_KEY: '${AIRFLOW__WEBSERVER__SECRET_KEY:-your-super-secret-and-long-key-goes-here}'
+    # <<< DITAMBAHKAN: Base URL untuk mengatasi error "Request URL is missing..."
+    AIRFLOW__WEBSERVER__BASE_URL: http://localhost:8080
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW_UID: ${AIRFLOW_UID}
@@ -18,6 +24,9 @@ x-airflow-common:
   depends_on:
     - postgres
     - redis
+  # <<< DITAMBAHKAN: Menghubungkan service ke jaringan yang sama
+  networks:
+    - airflow-network
 
 services:
   postgres:
@@ -31,11 +40,17 @@ services:
       - ./init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh
     ports:
       - "5432:5432"
+    # <<< DITAMBAHKAN: Menghubungkan service ke jaringan yang sama
+    networks:
+      - airflow-network
 
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    # <<< DITAMBAHKAN: Menghubungkan service ke jaringan yang sama
+    networks:
+      - airflow-network
 
   airflow-init:
     <<: *airflow-common
@@ -70,6 +85,11 @@ services:
   airflow-worker:
     <<: *airflow-common
     command: celery worker
+
+# <<< DITAMBAHKAN: Mendefinisikan jaringan agar semua service bisa saling berkomunikasi
+networks:
+  airflow-network:
+    driver: bridge
 
 volumes:
   postgres_data:

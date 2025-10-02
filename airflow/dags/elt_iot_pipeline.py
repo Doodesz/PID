@@ -154,9 +154,9 @@ with DAG(
         SELECT
             location,
             date,
-            ROUND(avg_temp, 2) AS avg_temp,
-            ROUND(min_temp, 2) AS min_temp,
-            ROUND(max_temp, 2) AS max_temp,
+            ROUND(avg_temp::numeric, 2) AS avg_temp,
+            ROUND(min_temp::numeric, 2) AS min_temp,
+            ROUND(max_temp::numeric, 2) AS max_temp,
             reading_count,
             CURRENT_TIMESTAMP AS created_at
         FROM daily_stats
@@ -217,7 +217,7 @@ with DAG(
             COUNT(*) as total_records,
             COUNT(DISTINCT location) as locations,
             COUNT(DISTINCT date) as dates,
-            ROUND(AVG(avg_temp), 2) as overall_avg_temp,
+            ROUND(AVG(avg_temp)::numeric, 2) as overall_avg_temp,
             MIN(date) as earliest_date,
             MAX(date) as latest_date
         FROM daily_sensor_summary_elt;

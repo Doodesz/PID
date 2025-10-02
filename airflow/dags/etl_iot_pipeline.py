@@ -183,7 +183,7 @@ with DAG(
             COUNT(*) as total_records,
             COUNT(DISTINCT location) as locations,
             COUNT(DISTINCT date) as dates,
-            ROUND(AVG(avg_temp), 2) as overall_avg_temp
+            ROUND(AVG(avg_temp)::numeric, 2) as overall_avg_temp
         FROM daily_sensor_summary_etl;
         """,
         autocommit=True,
